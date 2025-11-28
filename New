@@ -1,0 +1,78 @@
+@startuml
+!pragma layout smetana
+skinparam dpi 150
+skinparam linetype ortho
+skinparam shadowing false
+skinparam roundcorner 15
+
+' Colors
+!define COL_AGENT #d9e8fb
+!define COL_CICD #e8f5e4
+!define COL_REPO #fdf6d2
+!define COL_ENV #ffe0d5
+!define COL_INFRA #ececec
+!define COL_QA #f0e8ff
+!define COL_CTRL #ffe8aa
+
+skinparam rectangle {
+  FontSize 14
+  FontColor #000000
+  BorderColor #333333
+  BackgroundColor white
+}
+
+title **AI-Generated CI/CD Deployment Pipeline — Solution Architecture**
+
+rectangle "==Agent Colony Layer\n(AI CI/CD Agent Cluster)\n• Pipeline YAML Generation\n• Env Var Optimization\n• SAST/DAST Strategy\n• Approval Gates\n• Rollback & Deployment Strategy\n• Multi-Pipeline Variants"  as AGENT #COL_AGENT
+
+' ---------------- REPO & ARTIFACTS ----------------
+rectangle "==Source Code Repositories\n• Application Repo\n• Infra-as-Code Repo\n• Test Automation Repo" as REPO #COL_REPO
+
+rectangle "==Artifact Repository\n• WAR/JAR Builds\n• Docker Images\n• Versioned Manifests" as ARTIFACT #COL_REPO
+
+' ---------------- CI/CD PIPELINE ----------------
+rectangle "==CI/CD Orchestrator\n(Jenkins / GitHub Actions / GitLab CI / Azure DevOps)\nCoordinates multi-stage pipelines" as CICD #COL_CICD
+
+rectangle "==Build Stage\n• Compile\n• Unit Test\n• Package (WAR/JAR)\n• SBOM Generation" as BUILD #COL_CICD
+
+rectangle "==Test Stage\n• API Tests\n• UI Tests\n• E2E Tests\n• Load Tests" as TEST #COL_QA
+
+rectangle "==Scan Stage\n• SAST\n• DAST\n• Dependency Scan\n• License Compliance" as SCAN #COL_QA
+
+rectangle "==Quality Gates\n• SonarQube\n• Security Policy Checks\n• Coverage Thresholds" as QGATE #COL_CTRL
+
+rectangle "==Release Stage\n• Versioning\n• Tagging\n• Artifact Promotion\n• Release Notes" as RELEASE #COL_CICD
+
+rectangle "==Deployment Automation\n• Infra Provisioning\n• Config Management\n• Secrets Management" as DEPLOY #COL_INFRA
+
+' ---------------- ENVIRONMENTS ----------------
+rectangle "==Environment Layer\n• Dev\n• QA\n• Stage\n• Prod" as ENV #COL_ENV
+
+rectangle "==Deployment Strategies\n• Blue–Green\n• Rolling\n• Canary\n• Auto-Rollback" as STRATEGY #COL_ENV
+
+' ---------------- CONNECTIONS ----------------
+
+AGENT --> REPO : Analyzes\nRepo Structure
+AGENT --> CICD : Generates Pipeline YAML\n+ Parameters
+AGENT --> BUILD : Optimizes build steps
+AGENT --> TEST : Suggests Test Matrix
+AGENT --> SCAN : Proposes SAST/DAST rules
+AGENT --> DEPLOY : Recommends strategies\n(BG/Rolling/Canary)
+
+REPO --> CICD : Triggers Pipeline
+CICD --> BUILD : Build & Package
+BUILD --> ARTIFACT : Publish Artifact
+
+CICD --> TEST : Execute Tests
+CICD --> SCAN : Security Scans
+SCAN --> QGATE : Policy Evaluation
+TEST --> QGATE : Coverage/Quality Results
+
+QGATE --> RELEASE : Gate Passed → Promote
+RELEASE --> DEPLOY : Deployment Trigger
+DEPLOY --> ENV : Deploy to Environment
+
+DEPLOY --> STRATEGY : Apply Strategy
+STRATEGY --> ENV : Route Traffic / Rollback
+
+@enduml
