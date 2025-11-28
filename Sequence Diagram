@@ -1,0 +1,130 @@
+@startuml
+!pragma layout smetana
+skinparam dpi 150
+skinparam shadowing false
+skinparam monochrome false
+skinparam linetype ortho
+skinparam roundcorner 15
+
+skinparam sequence {
+    ArrowColor #003366
+    LifeLineBorderColor #003366
+    LifeLineBackgroundColor #f2f9ff
+    ParticipantBorderColor #333333
+    ParticipantBackgroundColor #ffffff
+    ParticipantFontSize 14
+}
+
+title **AI-Generated CI/CD Deployment Pipeline – Detailed Sequence Flow**
+
+participant Dev as "Developer\n(Commits Code)"
+participant Repo as "Source Code Repo\n(GitHub/GitLab/Azure)"
+participant AgentColony as "AI CI/CD Agent Colony"
+participant PipelineGen as "Pipeline Design Agent"
+participant SecurityAgent as "Security Agent\n(SAST/DAST)"
+participant QualityAgent as "Quality Agent"
+participant DeployAgent as "Deployment Strategy Agent"
+participant Orchestrator as "CI/CD Orchestrator\n(Jenkins/GitHub Actions/GitLab CI)"
+participant Build as "Build Executor"
+participant Tests as "Automated Tests\n(API/UI/E2E)"
+participant Scan as "Security Scans\n(SAST/DAST/Deps)"
+participant Gate as "Quality & Security Gates"
+participant Release as "Release Manager"
+participant Deploy as "Deployment Engine\n(Infra + Config)"
+participant Env as "Environments\nDev/QA/Stage/Prod"
+participant Strategy as "Blue-Green/Rolling/Canary"
+participant Obs as "Observability\n(Logs/Metrics/Traces)"
+
+== Developer triggers pipeline generation ==
+
+Dev -> Repo : Push Code / Create PR
+Repo -> AgentColony : Notify new repo structure\n+ commit metadata
+
+AgentColony -> PipelineGen : "Generate optimized CI/CD pipeline YAML"
+PipelineGen --> SecurityAgent : Request security guidelines
+SecurityAgent --> PipelineGen : SAST/DAST rules + policy templates
+
+PipelineGen -> QualityAgent : Request quality gates & test strategy
+QualityAgent --> PipelineGen : Test thresholds + coverage criteria
+
+PipelineGen -> DeployAgent : Request deployment strategy
+DeployAgent --> PipelineGen : Strategy (BG/Rolling/Canary) + rollback logic
+
+PipelineGen -> AgentColony : Return Complete Pipeline YAML
+
+AgentColony -> Orchestrator : Register/Update Pipeline Definition (YAML)
+
+== Pipeline Execution Triggered ==
+
+Dev -> Repo : Commit/Pull Request
+Repo -> Orchestrator : Pipeline Hook Trigger (WebHook)
+
+Orchestrator -> Build : Start Build Stage
+Build -> Repo : Fetch Source Code
+Build -> Build : Compile + Unit Tests + Package WAR/JAR/Container
+Build -> Obs : Emit Build Logs & Metrics
+
+Build -> Orchestrator : Build Success + Artifact Metadata
+
+Orchestrator -> Tests : Run Test Stage
+Tests -> Repo : Fetch Test Suites
+Tests -> Obs : Emit Test Logs, Coverage, Perf Metrics
+
+Tests -> Orchestrator : Test Results (Success/Fail)
+
+== Scan Stage ==
+
+Orchestrator -> Scan : Execute SAST / DAST / Dependency Scan
+Scan -> Obs : Emit Vulnerability Logs
+Scan -> Orchestrator : Scan Results (Critical/High/Low)
+
+== Quality & Security Gates ==
+
+Orchestrator -> Gate : Evaluate Quality & Security Gates\n(Coverage, Vulnerabilities, Policy Checks)
+Gate -> Obs : Gate Decision Telemetry
+
+Gate -> Orchestrator : Gate Passed / Failed
+
+alt Gate Failed
+    Orchestrator -> Dev : Notify Pipeline Failure\n(Scan/Test Issues)
+    Orchestrator -> AgentColony : Send Telemetry for Optimization
+    AgentColony -> PipelineGen : Suggest Pipeline Fixes\n(retune thresholds, improve caching, reorder steps)
+    return Pipeline Ends
+end
+
+== Release Stage ==
+
+Gate -> Release : Promote Artifact
+Release -> Obs : Emit Release Metadata
+Release -> Orchestrator : Ready for Deployment
+
+== Deployment Stage ==
+
+Orchestrator -> DeployAgent : Request final deployment plan
+DeployAgent -> Strategy : Select Execution Strategy\n(BG/Rolling/Canary)
+
+Strategy --> Deploy : Provide rollout instructions
+
+Deploy -> Env : Provision/Update Target Environment
+Deploy -> Obs : Emit Deployment Telemetry\n(error rate, latency, health checks)
+Env -> Deploy : Health/Readiness Response
+
+== Automated Rollback ==
+
+opt Deployment Health Check Fails
+    Deploy -> Strategy : Request Rollback Action
+    Strategy -> Deploy : Rollback to Previous Version
+    Deploy -> Env : Restore Last Stable Version
+    Deploy -> Obs : Emit Rollback Telemetry
+    Deploy -> Orchestrator : Rollback Complete
+end
+
+== Feedback Loop ==
+
+Obs -> AgentColony : Telemetry: build duration,\ntest flakiness, vulnerabilities, rollback stats
+AgentColony -> PipelineGen : Optimize pipeline YAML\n(reorder stages, caching, parallelization)
+PipelineGen -> Orchestrator : Update Pipeline YAML
+
+Dev <- Orchestrator : Final Status (Success / Failure)
+
+@enduml
